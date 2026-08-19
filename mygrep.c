@@ -5,14 +5,11 @@
 #include <string.h>
 #include <stdbool.h>
 
-int main(void)
+int main(int argc, char *argv[])
 {
-    char *word = NULL;
-    char *filename = NULL;
+
     char *line = NULL;
 
-    size_t word_capacity = 0;
-    size_t filename_capacity = 0;
     size_t line_capacity = 0;
 
     ssize_t chars_read;
@@ -20,7 +17,10 @@ int main(void)
     int line_number = 0;
     int found_count = 0;
     bool found = false;
-
+    if (argc < 3) {
+        printf("Использование: %s <слово> <файл>\n", argv[0]);
+        return 1;
+    }
     int found_capacity = 10;
     int *found_lines = malloc(found_capacity * sizeof(int));
 
@@ -30,44 +30,18 @@ int main(void)
 
     printf("My grep\n");
 
-    printf("Введите слово для поиска: ");
-
-    if (getline(&word, &word_capacity, stdin) == -1) {
-        printf("Ошибка: не удалось прочитать слово.\n");
-        free(word);
-        return 1;
-    }
-
-    word[strcspn(word, "\r\n")] = '\0';
-
-    printf("Введите имя файла: ");
-
-    if (getline(&filename, &filename_capacity, stdin) == -1) {
-        printf("Ошибка: не удалось прочитать имя файла.\n");
-
-        free(word);
-        free(filename);
-
-        return 1;
-    }
-
-    filename[strcspn(filename, "\r\n")] = '\0';
-
-    FILE *file = fopen(filename, "r");
+    FILE *file = fopen(argv[2], "r");
 
     if (file == NULL) {
         printf("Ошибка: файл не существует или недоступен.\n");
-
-        free(word);
-        free(filename);
-
+        free(found_lines);
         return 1;
     }
 
     while ((chars_read = getline(&line, &line_capacity, file)) != -1) {
         line_number++;
 
-        if (strstr(line, word) != NULL) {
+        if (strstr(line, argv[1]) != NULL) {
             printf(
                 "Слово найдено на строке %d: %s",
                 line_number,
@@ -80,10 +54,12 @@ int main(void)
                 found_capacity += 10;
                 int *temp = realloc(found_lines, found_capacity * sizeof(int));
 
-                if (temp == NULL) {
-                    free(found_lines);
-                    return 1;
-                }
+            if (temp == NULL) {
+                free(found_lines);
+                free(line);
+                fclose(file);
+                return 1;
+            }
                 found_lines = temp;
             }
 
@@ -112,8 +88,6 @@ int main(void)
         printf("Слово не найдено.\n");
     }
 
-    free(word);
-    free(filename);
     free(line);
     free(found_lines);
 
