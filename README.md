@@ -3,5 +3,5 @@
 **Linux**
 ```
 gcc mygrep.c -o mygrep
-./mygrep
+./mygrep your_word your_file.txt
 ```
